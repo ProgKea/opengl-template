@@ -1,5 +1,7 @@
 * OpenGL Template
 
+[[https://github.com/ProgKea/opengl-template/blob/master/demo.gif]]
+
 This is a simple OpenGL template to quickly get a OpenGL project up and running.
 It uses:
 - Tsoding's header only linear algebra library: https://github.com/tsoding/la
@@ -19,7 +21,3 @@ Install the dependencies:
   #+BEGIN_SRC shell
   $ nix run
   #+END_SRC
-
-** Demo
-
-[[https://github.com/ProgKea/opengl-template/blob/master/demo.gif]]

@@ -13,6 +13,13 @@ typedef struct {
 } Vertex;
 
 typedef enum {
+    SHADER_COLOR = 0,
+    SHADER_TEXT,
+    SHADER_RAINBOW,
+    COUNT_SHADERS,
+} Shader;
+
+typedef enum {
     UNIFORM_TIME = 0,
     UNIFORM_RESOLUTION,
     COUNT_UNIFORMS,
@@ -23,7 +30,8 @@ typedef enum {
 typedef struct {
     GLuint vao;
     GLuint vbo;
-    GLuint program;
+    GLuint programs[COUNT_SHADERS];
+    Shader current_shader;
 
     double time;
     V2f resolution;
@@ -46,6 +54,8 @@ void renderer_rect_gradient(Renderer *r, V2f p0, V4f c0, V4f c1, V4f c2, V4f c3,
 void renderer_rect_gradient_center(Renderer *r, V2f p0, V4f c0, V4f c1, V4f c2, V4f c3, V2f size);
 void renderer_rect(Renderer *r, V2f p0, V4f c0, V2f size);
 void renderer_rect_center(Renderer *r, V2f p0, V4f c0, V2f size);
+void renderer_image_rect(Renderer *r, V2f p0, V4f c0, V2f size, V2f uvp, V2f uvs);
+void renderer_set_shader(Renderer *r, Shader shader);
 void renderer_flush(Renderer *r);
 
 #endif  // RENDERER_H_

@@ -8,6 +8,15 @@
 
 #include "common.h"
 
+#define vert_shader_file_path "./shaders/simple.vert"
+
+static_assert(COUNT_SHADERS == 3, "The amount of fragment shaders has changed");
+const char *frag_shader_file_paths[COUNT_SHADERS] = {
+    [SHADER_COLOR] = "./shaders/color.frag",
+    [SHADER_TEXT] = "./shaders/text.frag",
+    [SHADER_RAINBOW] = "./shaders/rainbow.frag",
+};
+
 static Errno read_entire_file(const char *file_path, char **buffer, size_t *buffer_size)
 {
     Errno result = 0;
@@ -38,18 +47,19 @@ static void read_entire_file_checked(const char *file_path, char **buffer, size_
     }
 }
 
-static bool compile_shader_source(GLuint shader, const char *source)
+static bool compile_shader_source(GLuint *shader, GLenum shader_type, const char *source)
 {
-    glShaderSource(shader, 1, &source, NULL);
-    glCompileShader(shader);
+    *shader = glCreateShader(shader_type);
+    glShaderSource(*shader, 1, &source, NULL);
+    glCompileShader(*shader);
 
     GLint compiled = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    glGetShaderiv(*shader, GL_COMPILE_STATUS, &compiled);
 
     if (!compiled) {
         GLchar message[1024];
         GLsizei message_size = 0;
-        glGetShaderInfoLog(shader, sizeof(message), &message_size, message);
+        glGetShaderInfoLog(*shader, sizeof(message), &message_size, message);
         fprintf(stderr, "ERROR: Failed to compile shader\n");
         fprintf(stderr, "%.*s\n", message_size, message);
         return false;
@@ -58,14 +68,21 @@ static bool compile_shader_source(GLuint shader, const char *source)
     return true;
 }
 
-static bool compile_shader_file(GLuint shader, const char *file_path)
+static bool compile_shader_file(GLuint *shader, GLenum shader_type, const char *file_path)
 {
     char *content;
     size_t content_size;
     read_entire_file_checked(file_path, &content, &content_size);
-    bool result = compile_shader_source(shader, content);
+    bool result = compile_shader_source(shader, shader_type, content);
     if (content) free(content);
     return result;
+}
+
+static void attach_shaders_to_program(GLuint *shaders, size_t shaders_count, GLuint program)
+{
+    for (size_t i = 0; i < shaders_count; ++i) {
+        glAttachShader(program, shaders[i]);
+    }
 }
 
 static bool link_program(GLuint program)
@@ -109,14 +126,6 @@ static void get_uniform_locations(GLuint program, Uniform locations[COUNT_UNIFOR
     }
 }
 
-static void renderer_set_shader(Renderer *r)
-{
-    glUseProgram(r->program);
-    get_uniform_locations(r->program, r->uniforms);
-    glUniform2f(r->uniforms[UNIFORM_RESOLUTION], V2f_Arg(r->resolution));
-    glUniform1f(r->uniforms[UNIFORM_TIME], (float)r->time);
-}
-
 void renderer_init(Renderer *r)
 {
     {
@@ -155,22 +164,46 @@ void renderer_init(Renderer *r)
                               (GLvoid *) offsetof(Vertex, uv));
     }
 
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    if (!compile_shader_file(vertex_shader, "shaders/simple.vert")) exit(1);
-    if (!compile_shader_file(fragment_shader, "shaders/rainbow.frag")) exit(1);
+    // GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    // GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    // if (!compile_shader_file(vertex_shader, "shaders/simple.vert")) exit(1);
+    // if (!compile_shader_file(fragment_shader, "shaders/text.frag")) exit(1);
 
-    r->program = glCreateProgram();
-    glAttachShader(r->program, vertex_shader);
-    glAttachShader(r->program, fragment_shader);
+    // r->program = glCreateProgram();
+    // glAttachShader(r->program, vertex_shader);
+    // glAttachShader(r->program, fragment_shader);
 
-    if (!link_program(r->program)) exit(1);
-    glDetachShader(r->program, vertex_shader);
-    glDetachShader(r->program, fragment_shader);
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
+    // if (!link_program(r->program)) exit(1);
+    // glDetachShader(r->program, vertex_shader);
+    // glDetachShader(r->program, fragment_shader);
+    // glDeleteShader(vertex_shader);
+    // glDeleteShader(fragment_shader);
 
-    renderer_set_shader(r);
+    // renderer_set_shader(r);
+
+    GLuint shaders[2] = {0};
+
+    if (!compile_shader_file(&shaders[0], GL_VERTEX_SHADER, vert_shader_file_path)) exit(1);
+
+    for (int i = 0; i < COUNT_SHADERS; ++i) {
+        if (!compile_shader_file(&shaders[1], GL_FRAGMENT_SHADER, frag_shader_file_paths[i])) exit(1);
+        r->programs[i] = glCreateProgram();
+        attach_shaders_to_program(shaders, sizeof(shaders) / sizeof(shaders[0]), r->programs[i]);
+        if (!link_program(r->programs[i])) exit(1);
+        glDetachShader(r->programs[i], shaders[1]);
+        glDetachShader(r->programs[i], shaders[0]);
+        glDeleteShader(shaders[1]);
+    }
+    glDeleteShader(shaders[0]);
+}
+
+void renderer_set_shader(Renderer *r, Shader shader)
+{
+    r->current_shader = shader;
+    glUseProgram(r->programs[r->current_shader]);
+    get_uniform_locations(r->programs[r->current_shader], r->uniforms);
+    glUniform2f(r->uniforms[UNIFORM_RESOLUTION], V2f_Arg(r->resolution));
+    glUniform1f(r->uniforms[UNIFORM_TIME], (float)r->time);
 }
 
 static void renderer_vertex(Renderer *r, V2f p, V4f c, V2f uv)
@@ -237,6 +270,14 @@ void renderer_rect_center(Renderer *r, V2f p0, V4f c0, V2f size)
     renderer_rect(r, v2f(p0.x - size.x/2, p0.y - size.y/2), c0, size);
 }
 
+void renderer_image_rect(Renderer *r, V2f p0, V4f c0, V2f size, V2f uvp, V2f uvs)
+{
+    renderer_quad(r,
+                  p0, v2f_sum(p0, v2f(size.x, 0)), v2f_sum(p0, v2f(0, size.y)), v2f_sum(p0, size),
+                  c0, c0, c0, c0,
+                  uvp, v2f_sum(uvp, v2f(uvs.x, 0)), v2f_sum(uvp, v2f(0, uvs.y)), v2f_sum(uvp, uvs));
+}
+
 static void renderer_sync(Renderer *r)
 {
     glBufferSubData(GL_ARRAY_BUFFER,
@@ -254,11 +295,5 @@ void renderer_flush(Renderer *r)
 {
     renderer_sync(r);
     renderer_draw(r);
-    renderer_set_shader(r);
     r->vertices_count = 0;
-}
-
-void renderer_deinit(Renderer *r)
-{
-    free(r);
 }

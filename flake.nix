@@ -14,6 +14,7 @@
           glfw
           glew
           glslang
+          freetype
         ];
       });
     };

@@ -6,5 +6,7 @@ typedef int Errno;
 
 #define SCREEN_WIDTH  800
 #define SCREEN_HEIGHT 600
+#define APP_TITLE     "OpenGL Template"
+#define APP_TITLE_LEN 15
 
 #endif  // UTIL_H_

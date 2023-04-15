@@ -2,7 +2,7 @@ CC=clang
 DEPS=glfw3 opengl glew
 CFLAGS=-Wall -Wextra -std=c11 -pedantic `pkg-config --cflags $(DEPS)` -ggdb
 LIBS=`pkg-config --libs $(DEPS)` -lm
-SRC=main.c renderer.c
+SRC=src/main.c src/renderer.c
 
 .PHONY: app
 

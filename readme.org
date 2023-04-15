@@ -20,6 +20,6 @@ Install the dependencies:
   $ nix run
   #+END_SRC
 
-  ** Demo
+** Demo
 
-  [[file:demo.gif][Demo]]
+[[https://github.com/ProgKea/opengl-template/blob/master/demo.gif][Demo]]

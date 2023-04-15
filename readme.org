@@ -22,4 +22,4 @@ Install the dependencies:
 
 ** Demo
 
-[[https://github.com/ProgKea/opengl-template/blob/master/demo.gif][Demo]]
+[[https://github.com/ProgKea/opengl-template/blob/master/demo.gif]]

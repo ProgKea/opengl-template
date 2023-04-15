@@ -1,0 +1,25 @@
+* OpenGL Template
+
+This is a simple OpenGL template to quickly get a OpenGL project up and running.
+It uses:
+- Tsoding's header only linear algebra library: https://github.com/tsoding/la
+- GLFW3: https://www.glfw.org/
+- Glew: https://glew.sourceforge.net/
+
+** Getting started
+
+Install the dependencies:
+- gnumake
+- clang
+- pkg-config
+- glfw
+- glew
+
+  If you use the nix package manager you can do:
+  #+BEGIN_SRC shell
+  $ nix run
+  #+END_SRC
+
+  ** Demo
+
+  [[file:demo.gif][Demo]]

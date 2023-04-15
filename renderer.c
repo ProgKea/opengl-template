@@ -158,7 +158,7 @@ void renderer_init(Renderer *r)
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     if (!compile_shader_file(vertex_shader, "shaders/simple.vert")) exit(1);
-    if (!compile_shader_file(fragment_shader, "shaders/color.frag")) exit(1);
+    if (!compile_shader_file(fragment_shader, "shaders/rainbow.frag")) exit(1);
 
     r->program = glCreateProgram();
     glAttachShader(r->program, vertex_shader);

@@ -46,9 +46,10 @@ int main()
         return_defer(1);
     }
 
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // Doesn't work for some reason
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Kanview", 0, 0);
+    window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "App", 0, 0);
     if (!window) {
         return_defer(1);
     }
@@ -66,6 +67,11 @@ int main()
 
     renderer_init(&renderer);
 
+    V2f rect_pos  = v2f(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+    V2f rect_vel  = v2f(1, 1);
+    V2f rect_size = v2f(100, 100);
+    float rect_speed = 1;
+
     glClearColor(1, 1, 1, 1);
     glfwSetKeyCallback(window, key_callback);
     glfwSwapInterval(1);
@@ -78,12 +84,13 @@ int main()
         glViewport(0, 0, cur_width, cur_height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        renderer_rect_gradient(&renderer, v2f(0, 0),
-                               v4f(1, 1, 0, 1), v4f(1, 1, 0, 1), v4f(1, 1, 1, 1), v4f(1, 1, 1, 1),
-                               v2f(cur_width, cur_height/2));
-        renderer_rect_gradient(&renderer, v2f(0, cur_height/2),
-                               v4f(1, 1, 1, 1), v4f(1, 1, 1, 1), v4f(1, 1, 0, 1), v4f(1, 1, 0, 1),
-                               v2f(cur_width, cur_height/2));
+        renderer_rect_center(&renderer, rect_pos, v4f(0, 0, 0, 1), rect_size);
+
+        rect_pos = v2f_sum(rect_pos, v2f(rect_speed * rect_vel.x, rect_speed * rect_vel.y));
+        if (rect_pos.x + rect_size.x/2 >= SCREEN_WIDTH) rect_vel = v2f_mul(rect_vel, v2f(-1, 1));
+        if (rect_pos.y + rect_size.y/2 >= SCREEN_HEIGHT) rect_vel = v2f_mul(rect_vel, v2f(1, -1));
+        if (rect_pos.x - rect_size.x/2 <= 0) rect_vel = v2f_mul(rect_vel, v2f(-1, 1));
+        if (rect_pos.y - rect_size.y/2 <= 0) rect_vel = v2f_mul(rect_vel, v2f(1, -1));
 
         renderer_flush(&renderer);
         glfwSwapBuffers(window);

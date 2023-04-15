@@ -17,7 +17,7 @@ Install the dependencies:
 - glfw
 - glew
 
-  If you use the nix package manager you can do:
-  #+BEGIN_SRC shell
-  $ nix run
-  #+END_SRC
+If you use the nix package manager you can do:
+#+BEGIN_SRC shell
+$ nix run
+#+END_SRC
